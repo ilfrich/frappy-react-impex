@@ -4,13 +4,13 @@
   "description": "Database import/export related components for React",
   "main": "index.js",
   "scripts": {
-    "build": "./node_modules/.bin/babel src --out-dir ./dist",
+    "build": "babel src --out-dir ./dist",
     "deploy": "npm run build && npm publish",
     "format": "eslint --fix \"**/*.{js,mjs}\""
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:ilfrich/frappy-react-impex.git"
+    "url": "git+ssh://git@github.com/ilfrich/frappy-react-impex.git"
   },
   "keywords": [
     "database",
@@ -42,5 +42,10 @@
     "eslint-plugin-react": "^7.12.4",
     "file-loader": "^3.0.1",
     "prettier": "^1.16.4"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/ilfrich/frappy-react-impex/issues"
+  },
+  "homepage": "https://github.com/ilfrich/frappy-react-impex#readme",
+  "license": "Apache 2.0"
 }
