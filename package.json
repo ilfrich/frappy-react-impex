@@ -21,7 +21,8 @@
   ],
   "author": "Peter Ilfrich",
   "dependencies": {
-    "quick-n-dirty-react": "^0.2.7",
+    "luxon": "^3.0.4",
+    "quick-n-dirty-react": "^1.0.1",
     "quick-n-dirty-utils": "^1.0.0",
     "react": "^16.13.1"
   },

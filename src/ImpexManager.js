@@ -1,7 +1,9 @@
 import React from "react"
 import { util } from "quick-n-dirty-utils"
-import { mixins } from "quick-n-dirty-react"
+import { mixins, NotificationBar } from "quick-n-dirty-react"
+import { DateTime } from "luxon"
 import DatabaseSelect from "./DatabaseSelect"
+
 
 const style = {
     gridColumns: {
@@ -75,17 +77,21 @@ class ImpexManager extends React.Component {
         })
             .then(res => {
                 if (res.status === 200) {
-                    // download the zip file as blob
-                    const blob = new Blob([res], { type: "application/gzip" })
-                    const downloadUrl = URL.createObjectURL(blob)
-                    const a = document.createElement("a")
-                    a.href = downloadUrl
-                    document.body.appendChild(a)
-                    a.click()
-                    document.body.removeChild(a)
+                    return res.blob()
                 } else {
                     throw Error("Invalid status code")
                 }
+            })
+            .then(blob => {
+                // download the zip file as blob
+                const downloadUrl = URL.createObjectURL(blob)
+                const a = document.createElement("a")
+                const currentDate = DateTime.now().toFormat("yyyyMMdd_HHmmss")
+                a.download = `export_${this.state.currentDatabaseExport}_${currentDate}.zip`
+                a.href = downloadUrl
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
             })
             .catch(err => {
                 console.error("Error downloading export zip file", err)
@@ -94,41 +100,63 @@ class ImpexManager extends React.Component {
 
     importDatabase() {
         const file = this.importFile.files[0]
-        const body = { truncate: this.truncateOption.checked }
+        const options = { truncate: this.truncateOption.checked }
+
+        const formData = new FormData()
+        formData.append("file", file)
+        formData.append("options", JSON.stringify(options))
+
+        fetch(`${this.apiPrefix}/${this.state.currentDatabaseImport}`, {
+            method: "POST",
+            headers: util.getAuthHeader(),
+            body: formData,
+            
+        })
+            .then(util.restHandler)
+            .then(result => {
+                this.alert.success(`Imported ${result.count} documents into database`)
+                // reset import file form
+                this.importFile.value = ""
+            })
+
     }
 
     render() {
         return (
-            <div style={style.gridColumns}>
-                <div>
-                    <h5>Export</h5>
-                    <DatabaseSelect databases={this.state.databases} onChange={this.setCurrentDatabaseExport} />
-                    {this.state.currentDatabaseExport != null ? (
-                        <div style={mixins.buttonLine}>
-                            <button style={mixins.button} onClick={this.exportDatabase} type="button">Run Export</button>
-                        </div>
-                    ) : null}
-                </div>
-                <div>
-                    <h5>Import</h5>
+            <div>
+                <NotificationBar ref={el => { this.alert = el }} />
+                <div style={style.gridColumns}>
                     <div>
-                        <label style={mixins.label}>Database Import File (.zip)</label>
-                        <input type="file" ref={el => { this.importFile = el }} onChange={this.setImportFile} />
-                    </div>
-                    {this.state.importFile ? (
-                        <div>
-                            <DatabaseSelect databases={this.state.databases} onChange={this.setCurrentDatabaseImport} />
-                            <div>
-                                <input type="checkbox" style={mixins.checkbox} ref={el => {this.truncateOption = el }} defaultChecked id="import-truncate-option" />
-                                <label htmlFor="import-truncate-option">Truncate database before import</label>
+                        <h5>Export</h5>
+                        <DatabaseSelect databases={this.state.databases} onChange={this.setCurrentDatabaseExport} />
+                        {this.state.currentDatabaseExport != null ? (
+                            <div style={mixins.buttonLine}>
+                                <button style={mixins.button} onClick={this.exportDatabase} type="button">Run Export</button>
                             </div>
-                            {this.state.currentDatabaseImport != null ? (
-                                <div style={mixins.buttonLine}>
-                                    <button style={mixins.button} onClick={this.importDatabase} type="button">Run Import</button>
-                                </div>
-                            ) : null}                            
+                        ) : null}
+                    </div>
+                    <div>
+                        <h5>Import</h5>
+                        <DatabaseSelect databases={this.state.databases} onChange={this.setCurrentDatabaseImport} />
+                        <div>
+                            <label style={mixins.label}>Database Import File (.zip)</label>
+                            <input type="file" ref={el => { this.importFile = el }} onChange={this.setImportFile} />
                         </div>
-                    ) : null}
+                        {this.state.importFile ? (
+                            <div>
+                                <div style={mixins.vSpacer(15)} />
+                                <div>
+                                    <input type="checkbox" style={mixins.checkbox} ref={el => {this.truncateOption = el }} defaultChecked id="import-truncate-option" />
+                                    <label htmlFor="import-truncate-option">Truncate database before import</label>
+                                </div>
+                                {this.state.currentDatabaseImport != null ? (
+                                    <div style={mixins.buttonLine}>
+                                        <button style={mixins.button} onClick={this.importDatabase} type="button">Run Import</button>
+                                    </div>
+                                ) : null}                            
+                            </div>
+                        ) : null}
+                    </div>
                 </div>
             </div>
         )

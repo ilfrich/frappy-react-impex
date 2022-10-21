@@ -9,7 +9,7 @@ const DatabaseSelect = ({ onChange, databases }) => (
             <option value="">Please select database</option>
             {Object.keys(databases).map(dbKey => (
                 <option key={dbKey} value={dbKey}>
-                    {databases[dbKey][0] (databases[dbKey][1])}
+                    {databases[dbKey][0]} ({databases[dbKey][1]})
                 </option>
             ))}
         </select>
